@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" href="/static/css/device_manager.css"/>
+    <script type="application/javascript" src="/static/js/device_manager.js"></script>
+
+    {% block head %}
+    {% endblock %}
+
+    <title>device_manager - {% block title %}{% endblock %}</title>
+</head>
+<body>
+
+
+<div id="content">
+    {% block content %}
+    {% endblock %}
+</div>
+
+<div class="footer">
+    {% block footer %}
+        &copy; Copyright 2018 by device_manager
+    {% endblock %}
+</div>
+
+
+</body>
+</html>

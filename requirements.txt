@@ -1,0 +1,8 @@
+flask
+python-box
+pyyaml
+cherrypy
+Flask-Session
+reusables
+PyJWT
+appdirs

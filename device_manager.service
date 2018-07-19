@@ -1,0 +1,15 @@
+# /etc/systemd/system/device_manager.service
+
+[Unit]
+Description=device_manager
+After=network.target
+
+[Service]
+Restart=on-failure
+RestartSec=20
+User=device_manager
+WorkingDirectory=/opt/device_manager/src/
+ExecStart=/opt/device_manager/venv/bin/python -m device_manager
+
+[Install]
+WantedBy=multi-user.target
