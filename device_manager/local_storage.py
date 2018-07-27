@@ -2,44 +2,80 @@
 # -*- coding: UTF-8 -*-
 
 import os
+import re
+from threading import Lock
 
+from box import Box
 from appdirs import user_data_dir
 
 from device_manager.config import config
 
-DEFAULT_DIR = user_data_dir(config.app_name)
+__all__ = ['StorageBox', 'StorageBoxError']
+
+LOCK = Lock()
+SAVE_LOCK = Lock()
 
 
-class LocalStorageError(Exception):
+class StorageBoxError(Exception):
     pass
 
 
-class PermissionError(LocalStorageError):
-    pass
+class StorageBox:
 
+    def __init__(self, storage_type, project_name='device_manager', storage_directory=None, schema=None):
+        if not re.match('^\w+$', project_name):
+            raise StorageBoxError('Must only include letter, numbers and underscores in project_name')
+        if not re.match('^\w+$', storage_type):
+            raise StorageBoxError('Must only include letter, numbers and underscores in storage_type')
 
-class LocalStorage:
+        storage_directory = user_data_dir(project_name) if not storage_directory else storage_directory
+        os.makedirs(storage_directory, mode=0o644, exist_ok=True)
+        self.storage_location = os.path.join(storage_directory, f"{storage_type}.json")
+        print(f'Using storage location {self.storage_location}')
+        with SAVE_LOCK:
+            self.data = Box.from_json(filename=self.storage_location) if os.path.exists(self.storage_location) else Box()
+        self.schema = schema
+        self.save()
 
-    def __init__(self, project_name, storage_directory=DEFAULT_DIR):
-        self.project_name = project_name
-        self.storage_directory = storage_directory
-        self.structure = {}
-        self.permissions_check()
+    def keys(self):
+        with LOCK:
+            return self.data.keys()
 
-    def permissions_check(self):
-        test_dir = os.path.join(self.storage_directory, 'test_directory_plz_ignore')
-        if os.path.exists(test_dir):
-            try:
-                os.unlink(test_dir)
-            except OSError:
-                raise LocalStorageError(f'Test directory exists already, please remove {test_dir}')
-        try:
-            os.makedirs(test_dir)
-        except OSError:
-            raise PermissionError(f'Do not have permission to create folders at {self.storage_directory}')
+    def values(self):
+        with LOCK:
+            return self.data.values()
 
-    def get(self, path):
-        pass
+    def items(self):
+        with LOCK:
+            return list(self.data.items())
 
+    def get(self, key, default=None):
+        with LOCK:
+            return self.data.get(key, default)
 
+    def set(self, key, value):
+        if self.schema:
+            self.schema.validate(value)
+        with LOCK:
+            self.data[key] = value
+            self.save()
 
+    def delete(self, key):
+        with LOCK:
+            del self.data[key]
+            self.save()
+
+    def save(self):
+        with SAVE_LOCK:
+            self.data.to_json(filename=self.storage_location)
+
+    def load(self):
+        with SAVE_LOCK:
+            data = Box.from_json(filename=self.storage_location)
+        with LOCK:
+            self.data = data
+
+    def purge(self):
+        with LOCK:
+            self.data = Box()
+            self.save()

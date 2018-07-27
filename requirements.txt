@@ -6,3 +6,4 @@ Flask-Session
 reusables
 PyJWT
 appdirs
+schema
