@@ -16,7 +16,7 @@ app = flask.Flask('device_manager',
                   template_folder=os.path.join(here, 'templates'))
 
 
-app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_TYPE'] = config.session_type
 app.config['SESSION_FILE_DIR'] = config.session_cache_dir
 app.secret_key = config.session_secret
 
@@ -41,7 +41,8 @@ def register_blueprints():
     """This is functionalized so that a view could
     potentially import this app file if necessary"""
     from device_manager.views import templated, admin
-    from device_manager.api import devices
+    from device_manager.api import devices, auth
     app.register_blueprint(templated.blueprint)
     app.register_blueprint(admin.blueprint)
     app.register_blueprint(devices.blueprint)
+    app.register_blueprint(auth.blueprint)

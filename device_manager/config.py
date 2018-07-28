@@ -17,12 +17,13 @@ config = Box({
     "env": "development",
     "host": "127.0.0.1",
     "port": 21211,
+    "session_type": 'filesystem',
     "session_cache_dir": os.path.join(here, "cache", "session"),
     "session_secret": 'bad_secret',  # make real one with os.urandom(32).hex()
     "data_dir": os.path.join(here, "data"),
     "ssl": False,
     "version": "1.0.0",
-    "jwt_key": "secret",
+    "jwt_key": "secret",  # make real one
     "app_name": "device_manager"
 })
 
@@ -51,3 +52,8 @@ else:
 
 os.makedirs(config.session_cache_dir, exist_ok=True)
 os.makedirs(config.data_dir, exist_ok=True)
+
+if config.env.lower() in ['prod', 'production']:
+    if 'secret' in config.jwt_key or 'secret' in config.session_secret:
+        raise Exception('For production sites, '
+                        'you must change the jwt and session secrets')

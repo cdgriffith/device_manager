@@ -7,3 +7,4 @@ reusables
 PyJWT
 appdirs
 schema
+pytest

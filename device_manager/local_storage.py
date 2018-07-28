@@ -8,8 +8,6 @@ from threading import Lock
 from box import Box
 from appdirs import user_data_dir
 
-from device_manager.config import config
-
 __all__ = ['StorageBox', 'StorageBoxError']
 
 LOCK = Lock()
@@ -22,18 +20,24 @@ class StorageBoxError(Exception):
 
 class StorageBox:
 
-    def __init__(self, storage_type, project_name='device_manager', storage_directory=None, schema=None):
+    def __init__(self, storage_type, project_name='device_manager',
+                 storage_directory=None, schema=None):
         if not re.match('^\w+$', project_name):
-            raise StorageBoxError('Must only include letter, numbers and underscores in project_name')
+            raise StorageBoxError('Must only include letter, '
+                                  'numbers and underscores in project_name')
         if not re.match('^\w+$', storage_type):
-            raise StorageBoxError('Must only include letter, numbers and underscores in storage_type')
+            raise StorageBoxError('Must only include letter,'
+                                  ' numbers and underscores in storage_type')
 
-        storage_directory = user_data_dir(project_name) if not storage_directory else storage_directory
+        storage_directory = (user_data_dir(project_name) if
+                             not storage_directory else storage_directory)
         os.makedirs(storage_directory, mode=0o644, exist_ok=True)
-        self.storage_location = os.path.join(storage_directory, f"{storage_type}.json")
+        self.storage_location = os.path.join(storage_directory,
+                                             f"{storage_type}.json")
         print(f'Using storage location {self.storage_location}')
         with SAVE_LOCK:
-            self.data = Box.from_json(filename=self.storage_location) if os.path.exists(self.storage_location) else Box()
+            self.data = (Box.from_json(filename=self.storage_location)
+                         if os.path.exists(self.storage_location) else Box())
         self.schema = schema
         self.save()
 
@@ -79,3 +83,7 @@ class StorageBox:
         with LOCK:
             self.data = Box()
             self.save()
+
+    def search(self, key, value):
+        with LOCK:
+            return [v for v in self.data.values() if v.get(key) == value]
